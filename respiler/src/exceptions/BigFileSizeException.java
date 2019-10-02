@@ -1,10 +1,10 @@
 package exceptions;
 
-public class BigSizeException extends BaseException 
+public class BigFileSizeException extends BaseException 
 {
 	private static final long serialVersionUID = 7342603766813242107L;
 	
-	public BigSizeException(String string) 
+	public BigFileSizeException(String string) 
 	{
 		super(string);
 	}

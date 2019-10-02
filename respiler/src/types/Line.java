@@ -12,4 +12,9 @@ public class Line
 		this.start = start;
 		this.end = end;
 	}
+	
+	public Line()
+	{
+		this(null, 0, 0);
+	}
 }

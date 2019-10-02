@@ -2,6 +2,10 @@
 #ifndef SCL_H
 #define SCL_H 1
 
+/*
+*       Simple C Library
+*/
+
 #include <stdbool.h>
 
 #include "ctypes.h"

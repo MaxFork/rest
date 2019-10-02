@@ -6,10 +6,10 @@ ignores = (' ', '\t')
 newlines = '\n'
 
 name_first_char = string.ascii_letters + '_'
-name_rest_char = string.ascii_letters + '_' string.digits
+name_rest_char = string.ascii_letters + '_' + string.digits
 
 keywords = {
-    "from":         "form",
+    "from":         "from",
     "import":       "import",
     "as":           "as",
 
@@ -52,48 +52,48 @@ keywords = {
 }
 
 symbols = {
-    "BACKSLASH":    "\\",
+    "BACKSLASH":            "\\",
 
-    "LPAREN":       "(",
-    "RPAREN":       "(",
-    "LBRACE":       "{",
-    "RBRACE":       "}",
-    "LBRACKET":     "[",
-    "RBRACKET":     "[",
+    "LPAREN":               "(",
+    "RPAREN":               "(",
+    "LBRACE":               "{",
+    "RBRACE":               "}",
+    "LBRACKET":             "[",
+    "RBRACKET":             "[",
 
-    "SEMICOLON":    ";",
-    "COLON":        ":",
-    "COMMA":        ",",
-    "DOT":          ".",
+    "SEMICOLON":            ";",
+    "COLON":                ":",
+    "COMMA":                ",",
+    "DOT":                  ".",
 
-    "EQ":           "==",
-    "NE":           "!="
-    "LT":           "<",
-    "LE":           "<=",
-    "GT":           ">",
-    "GE":           ">=",
+    "EQ":                   "==",
+    "NE":                   "!=",
+    "LT":                   "<",
+    "LE":                   "<=",
+    "GT":                   ">",
+    "GE":                   ">=",
 
-    "AND":          "&&",
-    "OR":           "||",
-    "XOR":          "^^",
-    "NOT":          "!",
+    "AND":                  "&&",
+    "OR":                   "||",
+    "XOR":                  "^^",
+    "NOT":                  "!",
 
-    "ADD":          "+",
-    "SUB":          "-",
-    "DIV":          "/",
-    "MUL":          "*",
+    "ADD":                  "+",
+    "SUB":                  "-",
+    "DIV":                  "/",
+    "MUL":                  "*",
 
-    "MOD":          "%",
-    "TDIV":         "//",
-    "EXP":          "**",
+    "MOD":                  "%",
+    "TDIV":                 "//",
+    "EXP":                  "**",
 
-    "BIT_AND":      "&",
-    "BIT_OR":       "|",
-    "BIT_XOR":      "^",
-    "BIT_NOT":      "~",
+    "BIT_AND":              "&",
+    "BIT_OR":               "|",
+    "BIT_XOR":              "^",
+    "BIT_NOT":              "~",
 
-    "LSHIFT":       "<<",
-    "RSHIFT":       ">>",
+    "LSHIFT":               "<<",
+    "RSHIFT":               ">>",
 
     "ASSIGN":               "=",
 
@@ -113,6 +113,6 @@ symbols = {
     "LSHIFT_ASSIGN":        "<<=",
     "RSHIFT_ASSIGN":        ">>=",
 
-    "TYPE_OF":              "?="
-    "NOT_TYPE_OF":          "?!="
+    "TYPE_OF":              "?=",
+    "NOT_TYPE_OF":          "?!=",
 }

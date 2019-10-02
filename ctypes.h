@@ -1,6 +1,10 @@
 
-#ifndef TYPES_H
-#define TYPES_H 1
+#ifndef CTYPES_H
+#define CTYPES_H 1
+
+/*
+*       C Types Library
+*/
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -71,4 +75,4 @@ typedef struct
     linked_buffer_index_t end;
 } linked_buffer_line_t;
 
-#endif // TYPES_H
+#endif // CTYPES_H
