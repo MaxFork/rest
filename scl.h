@@ -6,6 +6,12 @@
 *       Simple C Library
 */
 
+#ifdef COMPILE_SCL
+#define SCL_DLL_EXPORT __declspec(dllexport)
+#else
+#define SCL_DLL_EXPORT __declspec(dllimport)
+#endif
+
 #include <stdbool.h>
 
 #include "ctypes.h"
@@ -27,8 +33,15 @@
 #define ERROR_FSEEK 2
 #define ERROR_FTELL 3
 #define ERROR_IO 4
-#define ERROR_INT_OVERFLOW 5
+#define ERROR_ZERO_FILE_SIZE 5
+#define ERROR_INT_OVERFLOW 6
+#define ERROR_FLOAT_OVERFLOW 7
+#define ERROR_BAD_ARGUMENTS 8
 #define ERROR_UNDEFINED_BEHAVIOR 0xFF
+
+#define STRLEN(string) (sizeof(string) - 1)
+
+#define ALLOCATE_TYPE(TYPE) (TYPE *)malloc(sizeof(TYPE))
 
 #define ERROR_CASE(NAME) \
     case NAME: \
@@ -44,6 +57,10 @@ char *str_error(int error)
         ERROR_CASE(ERROR_FSEEK)
         ERROR_CASE(ERROR_FTELL)
         ERROR_CASE(ERROR_IO)
+        ERROR_CASE(ERROR_ZERO_FILE_SIZE)
+        ERROR_CASE(ERROR_INT_OVERFLOW)
+        ERROR_CASE(ERROR_FLOAT_OVERFLOW)
+        ERROR_CASE(ERROR_BAD_ARGUMENTS)
         ERROR_CASE(ERROR_UNDEFINED_BEHAVIOR)
     default:
         return "unknown error";
@@ -54,7 +71,12 @@ char *str_error(int error)
 
 #define print_error(fmt) fprintf(stderr, "error: " fmt "\n")
 #define printf_error(fmt, ...) fprintf(stderr, "error: " fmt "\n", __VA_ARGS__)
-#define printf_line(fmt, ...) fprintf(stdout, fmt "\n", __VA_ARGS__)
+
+#define print_line(fmt)                 fprintf(stdout, fmt "\n")
+#define printf_line(fmt, ...)           fprintf(stdout, fmt "\n", __VA_ARGS__)
+
+#define fprint_line(file, fmt)          fprintf(file, fmt "\n")
+#define fprintf_line(file, fmt, ...)    fprintf(file, fmt "\n", __VA_ARGS__)
 
 long get_file_size(FILE *file, int *error)
 {
@@ -93,12 +115,17 @@ void read_file(FILE *file, buffer_t *buffer, int *error)
         return;
     }
 
+    if (file_size == 0)
+    {
+        *error = ERROR_ZERO_FILE_SIZE;
+        return;
+    }
 
     #if LONG_MAX > SIZE_MAX
-        #error LONG_MAX is greater than SIZE_MAX
+        #error LONG_MAX is greater than SIZE_MAX.
     #endif
 
-    buffer->pntr = malloc(file_size);
+    buffer->pntr = (char *)malloc(file_size);
     if (!(buffer->pntr))
     {
         *error = ERROR_NO_MEMORY;
@@ -290,6 +317,8 @@ void buffer_lines_iterator_inc_index(buffer_lines_iterator_t *iterator)
 static inline
 bool buffer_lines_iterator_next_index(buffer_lines_iterator_t *iterator)
 {
+    if (iterator->end)
+        return true;
     buffer_lines_iterator_next_index(iterator);
     return iterator->end;
 }
@@ -298,6 +327,13 @@ bool buffer_lines_iterator_next_index(buffer_lines_iterator_t *iterator)
 #define UPPERCASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #define LETTERS (LOWERCASE UPPERCASE)
 #define DIGITS "0123456789"
+
+static inline
+int buffer_compare(buffer_t *buffer, size_t offset, size_t length,
+    const char *string)
+{
+    return strncmp(buffer + offset, string, length);
+}
 
 static inline
 bool chr_in(char ch, const char *string)
@@ -402,5 +438,7 @@ bool rfind_chr_not(char *pntr, size_t length, const char *string)
     }
     return length;
 }
+
+#undef SCL_DLL_EXPORT
 
 #endif // SCL_H
