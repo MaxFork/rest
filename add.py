@@ -7,7 +7,7 @@ files = [
 
     'scl.h', 'ctypes.h',
 
-    'restokens.h', 'rescore.h',
+    'restokens.h', 'rescore.h', 'resfig.h', 
 
     'make.bat', 'add.py',
 
