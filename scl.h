@@ -131,11 +131,11 @@ bool chr_in(char ch, const char *string);
 
 static inline
 size_t find_chr_test_index(char *pntr, size_t start, size_t end,
-    bool (*test) (char ch));
+    int (*test) (int ch));
 
 static inline
 size_t rfind_chr_test_index(char *pntr, size_t start, size_t end,
-    bool (*test) (char ch));
+    int (*test) (int ch));
 
 static inline
 size_t find_chr_index(char *pntr, size_t start, size_t end,
@@ -449,7 +449,7 @@ void initialize_buffer_lines_iterator(FILE *file,
 
     iterator->lnum = 0;
     iterator->index = iterator->lines.pntr[0].start;
-    
+
     iterator->end = false;
 }
 
@@ -494,10 +494,9 @@ bool chr_in(char ch, const char *string)
     return false;
 }
 
-
 static inline
 size_t find_chr_test_index(char *pntr, size_t start, size_t end,
-    bool (*test) (char ch))
+    int (*test) (int ch))
 {
     size_t index = start;
     while (index < end)
@@ -513,7 +512,7 @@ size_t find_chr_test_index(char *pntr, size_t start, size_t end,
 
 static inline
 size_t rfind_chr_test_index(char *pntr, size_t start, size_t end,
-    bool (*test) (char ch))
+    int (*test) (int ch))
 {
     size_t index = start;
     while (index > start)
@@ -558,7 +557,8 @@ size_t rfind_chr_index(char *pntr, size_t start, size_t end, const char *string)
 }
 
 static inline
-size_t find_chr_not_index(char *pntr, size_t start, size_t end, const char *string)
+size_t find_chr_not_index(char *pntr, size_t start, size_t end,
+    const char *string)
 {
     size_t index = start;
     while (index < end)
@@ -573,7 +573,8 @@ size_t find_chr_not_index(char *pntr, size_t start, size_t end, const char *stri
 }
 
 static inline
-size_t rfind_chr_not_index(char *pntr, size_t start, size_t end, const char *string)
+size_t rfind_chr_not_index(char *pntr, size_t start, size_t end,
+    const char *string)
 {
     size_t index = end;
     while (index > start)

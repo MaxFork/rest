@@ -68,7 +68,7 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
     keyword_loop:
         if (NEXT_INDEX)
         {
-            
+
         }
 
         if (IS_LOWER)
