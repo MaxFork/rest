@@ -23,17 +23,29 @@ typedef struct
     size_t end;
 } line_t;
 
+#define LINE_LEN(line) ((line).end - (line).start)
+
 typedef struct
 {
     line_t *pntr;
     size_t total;
 } lines_t;
 
+#define LINES_GET_START_INDEX(lines, lnum) ((lines).pntr[lnum].start)
+#define LINES_GET_END_INDEX(lines, lnum) ((lines).pntr[lnum].end)
+
 typedef struct
 {
     buffer_t buffer;
     lines_t lines;
 } buffer_lines_t;
+
+#define BUFFER_LINES_GET_PNTR(buffer_lines, lnum) \
+    ((buffer_lines).buffer.pntr + (buffer_lines).lines.pntr[lnum].start)
+#define BUFFER_LINES_GET_LEN(buffer_lines, lnum) \
+    LINE_LEN((buffer_lines).lines.pntr[lnum])
+#define BUFFER_LINES_GET_CHAR(buffer_lines, lnum, index) \
+    (BUFFER_LINES_GET_PNTR(buffer_lines, lnum)[index])
 
 typedef struct
 {
@@ -47,11 +59,6 @@ typedef struct
     buffer_lines_index_t;
     bool end;
 } buffer_lines_iterator_t;
-
-#define LINE_LEN(line) ((line).end - (line).start)
-
-#define LINES_GET_START_INDEX(lines, lnum) ((lines).pntr[lnum].start)
-#define LINES_GET_END_INDEX(lines, lnum) ((lines).pntr[lnum].end)
 
 #define BUFFER_LINES_ITERATOR_GET_INDEX(iterator) \
     ((iterator).buffer.pntr[(iterator).index])

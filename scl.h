@@ -13,6 +13,9 @@
 #endif
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "ctypes.h"
 
@@ -28,20 +31,32 @@
 #define EXIT_ARGUMENT_ERROR 2
 #define EXIT_NORMAL 0
 
-#define NO_ERROR 0
-#define ERROR_NO_MEMORY 1
-#define ERROR_FSEEK 2
-#define ERROR_FTELL 3
-#define ERROR_IO 4
-#define ERROR_ZERO_FILE_SIZE 5
-#define ERROR_INT_OVERFLOW 6
-#define ERROR_FLOAT_OVERFLOW 7
-#define ERROR_BAD_ARGUMENTS 8
-#define ERROR_UNDEFINED_BEHAVIOR 0xFF
-
 #define STRLEN(string) (sizeof(string) - 1)
 
 #define ALLOCATE_TYPE(TYPE) (TYPE *)malloc(sizeof(TYPE))
+
+#define print_error(fmt) fprintf(stderr, "error: " fmt "\n")
+#define printf_error(fmt, ...) fprintf(stderr, "error: " fmt "\n", __VA_ARGS__)
+
+#define print_line(fmt)                 fprintf(stdout, fmt "\n")
+#define printf_line(fmt, ...)           fprintf(stdout, fmt "\n", __VA_ARGS__)
+
+#define fprint_line(file, fmt)          fprintf(file, fmt "\n")
+#define fprintf_line(file, fmt, ...)    fprintf(file, fmt "\n", __VA_ARGS__)
+
+#define NO_ERROR 0
+#define ERROR_NO_MEMORY 1
+#define ERROR_FOPEN 2
+#define ERROR_FSEEK 3
+#define ERROR_FTELL 4
+#define ERROR_IO 5
+#define ERROR_ZERO_FILE_SIZE 6
+#define ERROR_INT_OVERFLOW 7
+#define ERROR_FLOAT_OVERFLOW 8
+#define ERROR_BAD_ARGUMENTS 9
+#define ERROR_UNDEFINED_BEHAVIOR 0xFF
+
+#define ERROR_MAX 0xFF
 
 #define ERROR_CASE(NAME) \
     case NAME: \
@@ -54,6 +69,7 @@ char *str_error(int error)
     {
         ERROR_CASE(NO_ERROR)
         ERROR_CASE(ERROR_NO_MEMORY)
+        ERROR_CASE(ERROR_FOPEN)
         ERROR_CASE(ERROR_FSEEK)
         ERROR_CASE(ERROR_FTELL)
         ERROR_CASE(ERROR_IO)
@@ -69,15 +85,80 @@ char *str_error(int error)
 
 #undef CASE
 
-#define print_error(fmt) fprintf(stderr, "error: " fmt "\n")
-#define printf_error(fmt, ...) fprintf(stderr, "error: " fmt "\n", __VA_ARGS__)
+#define LOWERCASE "abcdefghijklmnopqrstuvwxyz"
+#define UPPERCASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define LETTERS (LOWERCASE UPPERCASE)
+#define DIGITS "0123456789"
 
-#define print_line(fmt)                 fprintf(stdout, fmt "\n")
-#define printf_line(fmt, ...)           fprintf(stdout, fmt "\n", __VA_ARGS__)
+// functions
 
-#define fprint_line(file, fmt)          fprintf(file, fmt "\n")
-#define fprintf_line(file, fmt, ...)    fprintf(file, fmt "\n", __VA_ARGS__)
+static inline
+int print_error_msg(int error);
 
+static inline
+long get_file_size(FILE *file, int *error);
+
+static inline
+void read_file(FILE *file, buffer_t *buffer, int *error);
+
+static inline
+void read_file_name(const char *name, FILE **file, buffer_t *buffer,
+    int *error);
+
+static inline
+void split_lines(buffer_t *buffer, lines_t *lines, int *error);
+
+static inline
+void read_lines(FILE *file, buffer_lines_t *buffer_lines, int *error);
+
+static inline
+void read_lines_name(const char *name, FILE **file,
+    buffer_lines_t *buffer_lines, int *error);
+
+
+static inline
+bool chr_in(char ch, const char *string);
+
+static inline
+size_t find_chr_test(char *pntr, size_t length, bool (*test) (char ch));
+
+static inline
+size_t rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch));
+
+static inline
+size_t find_chr(char *pntr, size_t length, const char *string);
+
+static inline
+size_t rfind_chr(char *pntr, size_t length, const char *string);
+
+static inline
+size_t find_chr_not(char *pntr, size_t length, const char *string);
+
+static inline
+size_t rfind_chr_not(char *pntr, size_t length, const char *string);
+
+
+// core
+
+static inline
+int print_error_msg(int error)
+{
+    return printf_error("%s", str_error(error));
+}
+
+static inline
+bool check_fopen(FILE **file, const char *name, const char *mode)
+{
+    *file = fopen(name, mode);
+    if ((*file) == NULL)
+    {
+        printf_error("can't open '%s': %s", name, strerror(errno));
+        return true;
+    }
+    return false;
+}
+
+static inline
 long get_file_size(FILE *file, int *error)
 {
     long file_size;
@@ -143,6 +224,19 @@ void read_file(FILE *file, buffer_t *buffer, int *error)
 
         return;
     }
+}
+
+static inline
+void read_file_name(const char *name, FILE **file, buffer_t *buffer,
+    int *error)
+{
+    *file = fopen(name, "rb");
+    if ((*file) == NULL)
+    {
+        *error = ERROR_FOPEN;
+        return;
+    }
+    read_file(*file, buffer, error);
 }
 
 static inline
@@ -283,6 +377,84 @@ void read_lines(FILE *file, buffer_lines_t *buffer_lines, int *error)
 }
 
 static inline
+void read_lines_name(const char *name, FILE **file,
+    buffer_lines_t *buffer_lines, int *error)
+{
+    *file = fopen(name, "rb");
+    if ((*file) == NULL)
+    {
+        *error = ERROR_FOPEN;
+        return;
+    }
+    read_lines(*file, buffer_lines, error);
+}
+
+
+static inline
+size_t buffer_lines_write_line(buffer_lines_t *buffer_lines, size_t lnum,
+    FILE *file)
+{
+    return fwrite(
+        buffer_lines->buffer.pntr + buffer_lines->lines.pntr[lnum].start, 1,
+        LINE_LEN(buffer_lines->lines.pntr[lnum]), file);
+}
+
+static inline
+size_t buffer_lines_find_chr_test(buffer_lines_t *buffer_lines, size_t lnum,
+    bool (*test) (char ch))
+{
+    return find_chr_test(
+        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
+        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), test);
+}
+
+static inline
+size_t buffer_lines_rfind_chr_test(buffer_lines_t *buffer_lines, size_t lnum,
+    bool (*test) (char ch))
+{
+    return rfind_chr_test(
+        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
+        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), test);
+}
+
+static inline
+size_t buffer_lines_find_chr(buffer_lines_t *buffer_lines, size_t lnum,
+    const char *string)
+{
+    return find_chr(
+        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
+        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
+}
+
+static inline
+size_t buffer_lines_find_chr_not(buffer_lines_t *buffer_lines, size_t lnum,
+    const char *string)
+{
+    return find_chr_not(
+        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
+        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
+}
+
+static inline
+size_t buffer_lines_rfind_chr(buffer_lines_t *buffer_lines, size_t lnum,
+    const char *string)
+{
+    return rfind_chr(
+        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
+        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
+}
+
+static inline
+size_t buffer_lines_rfind_chr_not(buffer_lines_t *buffer_lines, size_t lnum,
+    const char *string)
+{
+    return rfind_chr_not(
+        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
+        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
+}
+
+
+static inline
 void initialize_buffer_lines_iterator(FILE *file,
     buffer_lines_iterator_t *iterator, int *error)
 {
@@ -323,17 +495,7 @@ bool buffer_lines_iterator_next_index(buffer_lines_iterator_t *iterator)
     return iterator->end;
 }
 
-#define LOWERCASE "abcdefghijklmnopqrstuvwxyz"
-#define UPPERCASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-#define LETTERS (LOWERCASE UPPERCASE)
-#define DIGITS "0123456789"
 
-static inline
-int buffer_compare(buffer_t *buffer, size_t offset, size_t length,
-    const char *string)
-{
-    return strncmp(buffer + offset, string, length);
-}
 
 static inline
 bool chr_in(char ch, const char *string)
@@ -350,7 +512,7 @@ bool chr_in(char ch, const char *string)
 }
 
 static inline
-bool find_chr_test(char *pntr, size_t length, bool (*test) (char ch))
+size_t find_chr_test(char *pntr, size_t length, bool (*test) (char ch))
 {
     size_t index = 0;
     while (index < length)
@@ -365,7 +527,7 @@ bool find_chr_test(char *pntr, size_t length, bool (*test) (char ch))
 }
 
 static inline
-bool rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch))
+size_t rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch))
 {
     size_t index = length;
     while (index > 0)
@@ -380,7 +542,7 @@ bool rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch))
 }
 
 static inline
-bool find_chr(char *pntr, size_t length, const char *string)
+size_t find_chr(char *pntr, size_t length, const char *string)
 {
     size_t index = 0;
     while (index < length)
@@ -395,7 +557,7 @@ bool find_chr(char *pntr, size_t length, const char *string)
 }
 
 static inline
-bool rfind_chr(char *pntr, size_t length, const char *string)
+size_t rfind_chr(char *pntr, size_t length, const char *string)
 {
     size_t index = length;
     while (index > 0)
@@ -410,7 +572,7 @@ bool rfind_chr(char *pntr, size_t length, const char *string)
 }
 
 static inline
-bool find_chr_not(char *pntr, size_t length, const char *string)
+size_t find_chr_not(char *pntr, size_t length, const char *string)
 {
     size_t index = 0;
     while (index < length)
@@ -425,7 +587,7 @@ bool find_chr_not(char *pntr, size_t length, const char *string)
 }
 
 static inline
-bool rfind_chr_not(char *pntr, size_t length, const char *string)
+size_t rfind_chr_not(char *pntr, size_t length, const char *string)
 {
     size_t index = length;
     while (index > 0)
