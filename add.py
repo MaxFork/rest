@@ -9,7 +9,7 @@ files = [
 
     'restokens.h', 'rescore.h', 'resfig.h',
 
-    'make.bat', 'add.py',
+    'make.bat', 'add.py', 'README.md',
 ]
 
 

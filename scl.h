@@ -6,18 +6,22 @@
 *       Simple C Library
 */
 
-#ifdef COMPILE_SCL
-#define SCL_DLL_EXPORT __declspec(dllexport)
-#else
-#define SCL_DLL_EXPORT __declspec(dllimport)
-#endif
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "ctypes.h"
+
+#ifndef SCL_SAFE
+#define SCL_SAFE
+#endif
+
+#ifdef COMPILE_SCL
+#define SCL_DLL_EXPORT __declspec(dllexport)
+#else
+#define SCL_DLL_EXPORT __declspec(dllimport)
+#endif
 
 #if SIZE_MAX == ULLONG_MAX
 #define SIZE_M "%I64u"
@@ -96,14 +100,16 @@ static inline
 int print_error_msg(int error);
 
 static inline
+bool check_fopen(FILE **file, const char *name, const char *mode);
+
+static inline
 long get_file_size(FILE *file, int *error);
 
 static inline
 void read_file(FILE *file, buffer_t *buffer, int *error);
 
 static inline
-void read_file_name(const char *name, FILE **file, buffer_t *buffer,
-    int *error);
+void read_file_name(const char *name, file_buffer_t *file_buffer, int *error);
 
 static inline
 void split_lines(buffer_t *buffer, lines_t *lines, int *error);
@@ -112,31 +118,68 @@ static inline
 void read_lines(FILE *file, buffer_lines_t *buffer_lines, int *error);
 
 static inline
-void read_lines_name(const char *name, FILE **file,
-    buffer_lines_t *buffer_lines, int *error);
+void read_file_name_lines(const char *name,
+    file_buffer_lines_t *file_buffer_lines, int *error);
 
+
+// chr_in
 
 static inline
 bool chr_in(char ch, const char *string);
 
-static inline
-size_t find_chr_test(char *pntr, size_t length, bool (*test) (char ch));
+// find_*_index
 
 static inline
-size_t rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch));
+size_t find_chr_test_index(char *pntr, size_t start, size_t end,
+    bool (*test) (char ch));
 
 static inline
-size_t find_chr(char *pntr, size_t length, const char *string);
+size_t rfind_chr_test_index(char *pntr, size_t start, size_t end,
+    bool (*test) (char ch));
 
 static inline
-size_t rfind_chr(char *pntr, size_t length, const char *string);
+size_t find_chr_index(char *pntr, size_t start, size_t end,
+    const char *string);
 
 static inline
-size_t find_chr_not(char *pntr, size_t length, const char *string);
+size_t rfind_chr_index(char *pntr, size_t start, size_t end,
+    const char *string);
 
 static inline
-size_t rfind_chr_not(char *pntr, size_t length, const char *string);
+size_t find_chr_not_index(char *pntr, size_t start, size_t end,
+    const char *string);
 
+static inline
+size_t rfind_chr_not_index(char *pntr, size_t start, size_t end,
+    const char *string);
+
+// find_*_length
+
+static inline
+size_t find_chr_test_length(char *pntr, size_t length,
+    bool (*test) (char ch));
+
+static inline
+size_t rfind_chr_test_length(char *pntr, size_t length,
+    bool (*test) (char ch));
+
+static inline
+size_t find_chr_length(char *pntr, size_t length, const char *string);
+
+static inline
+size_t rfind_chr_length(char *pntr, size_t length, const char *string);
+
+static inline
+size_t find_chr_not_length(char *pntr, size_t length, const char *string);
+
+static inline
+size_t rfind_chr_not_length(char *pntr, size_t length, const char *string);
+
+// strip_*
+
+static inline
+void strip_chr_length(char *pntr, size_t length, const char *string,
+    char **res_pntr, size_t *res_length);
 
 // core
 
@@ -150,7 +193,7 @@ static inline
 bool check_fopen(FILE **file, const char *name, const char *mode)
 {
     *file = fopen(name, mode);
-    if ((*file) == NULL)
+    if (!(*file))
     {
         printf_error("can't open '%s': %s", name, strerror(errno));
         return true;
@@ -227,16 +270,15 @@ void read_file(FILE *file, buffer_t *buffer, int *error)
 }
 
 static inline
-void read_file_name(const char *name, FILE **file, buffer_t *buffer,
-    int *error)
+void read_file_name(const char *name, file_buffer_t *file_buffer, int *error)
 {
-    *file = fopen(name, "rb");
-    if ((*file) == NULL)
+    file_buffer->file = fopen(name, "rb");
+    if (!(file_buffer->file))
     {
         *error = ERROR_FOPEN;
         return;
     }
-    read_file(*file, buffer, error);
+    read_file(file_buffer->file, &(file_buffer->buffer), error);
 }
 
 static inline
@@ -289,13 +331,13 @@ void split_lines(buffer_t *buffer, lines_t *lines, int *error)
         }
     }
 
-    if (__builtin_mul_overflow(total, sizeof(line_t), &lines_size))
+    if (__builtin_mul_overflow(total, sizeof(buffer_index_t), &lines_size))
     {
         *error = ERROR_INT_OVERFLOW;
         return;
     }
 
-    lines->pntr = (line_t *)malloc(lines_size);
+    lines->pntr = (buffer_index_t *)malloc(lines_size);
     if (lines == NULL)
     {
         *error = ERROR_NO_MEMORY;
@@ -377,80 +419,17 @@ void read_lines(FILE *file, buffer_lines_t *buffer_lines, int *error)
 }
 
 static inline
-void read_lines_name(const char *name, FILE **file,
-    buffer_lines_t *buffer_lines, int *error)
+void read_file_name_lines(const char *name,
+    file_buffer_lines_t *file_buffer_lines, int *error)
 {
-    *file = fopen(name, "rb");
-    if ((*file) == NULL)
+    file_buffer_lines->file = fopen(name, "rb");
+    if (!(file_buffer_lines->file))
     {
         *error = ERROR_FOPEN;
         return;
     }
-    read_lines(*file, buffer_lines, error);
-}
-
-
-static inline
-size_t buffer_lines_write_line(buffer_lines_t *buffer_lines, size_t lnum,
-    FILE *file)
-{
-    return fwrite(
-        buffer_lines->buffer.pntr + buffer_lines->lines.pntr[lnum].start, 1,
-        LINE_LEN(buffer_lines->lines.pntr[lnum]), file);
-}
-
-static inline
-size_t buffer_lines_find_chr_test(buffer_lines_t *buffer_lines, size_t lnum,
-    bool (*test) (char ch))
-{
-    return find_chr_test(
-        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
-        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), test);
-}
-
-static inline
-size_t buffer_lines_rfind_chr_test(buffer_lines_t *buffer_lines, size_t lnum,
-    bool (*test) (char ch))
-{
-    return rfind_chr_test(
-        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
-        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), test);
-}
-
-static inline
-size_t buffer_lines_find_chr(buffer_lines_t *buffer_lines, size_t lnum,
-    const char *string)
-{
-    return find_chr(
-        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
-        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
-}
-
-static inline
-size_t buffer_lines_find_chr_not(buffer_lines_t *buffer_lines, size_t lnum,
-    const char *string)
-{
-    return find_chr_not(
-        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
-        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
-}
-
-static inline
-size_t buffer_lines_rfind_chr(buffer_lines_t *buffer_lines, size_t lnum,
-    const char *string)
-{
-    return rfind_chr(
-        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
-        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
-}
-
-static inline
-size_t buffer_lines_rfind_chr_not(buffer_lines_t *buffer_lines, size_t lnum,
-    const char *string)
-{
-    return rfind_chr_not(
-        BUFFER_LINES_GET_PNTR(*buffer_lines, lnum),
-        BUFFER_LINES_GET_LEN(*buffer_lines, lnum), string);
+    read_lines(file_buffer_lines->file, &(file_buffer_lines->buffer_lines),
+        error);
 }
 
 
@@ -458,14 +437,19 @@ static inline
 void initialize_buffer_lines_iterator(FILE *file,
     buffer_lines_iterator_t *iterator, int *error)
 {
-    read_lines(file, &((buffer_lines_t) {.buffer = iterator->buffer,
-        .lines = iterator->lines}), error);
+    buffer_lines_t buffer_lines;
+    read_lines(file, &buffer_lines, error);
     if ((*error) != NO_ERROR)
     {
         return;
     }
+
+    iterator->buffer = buffer_lines.buffer;
+    iterator->lines = buffer_lines.lines;
+
     iterator->lnum = 0;
     iterator->index = iterator->lines.pntr[0].start;
+    
     iterator->end = false;
 }
 
@@ -496,7 +480,6 @@ bool buffer_lines_iterator_next_index(buffer_lines_iterator_t *iterator)
 }
 
 
-
 static inline
 bool chr_in(char ch, const char *string)
 {
@@ -511,8 +494,102 @@ bool chr_in(char ch, const char *string)
     return false;
 }
 
+
 static inline
-size_t find_chr_test(char *pntr, size_t length, bool (*test) (char ch))
+size_t find_chr_test_index(char *pntr, size_t start, size_t end,
+    bool (*test) (char ch))
+{
+    size_t index = start;
+    while (index < end)
+    {
+        if (test(pntr[index]))
+        {
+            return index;
+        }
+        index += 1;
+    }
+    return end;
+}
+
+static inline
+size_t rfind_chr_test_index(char *pntr, size_t start, size_t end,
+    bool (*test) (char ch))
+{
+    size_t index = start;
+    while (index > start)
+    {
+        index -= 1;
+        if (test(pntr[index]))
+        {
+            return index;
+        }
+    }
+    return end;
+}
+
+static inline
+size_t find_chr_index(char *pntr, size_t start, size_t end, const char *string)
+{
+    size_t index = start;
+    while (index < end)
+    {
+        if (chr_in(pntr[index], string))
+        {
+            return index;
+        }
+        index += 1;
+    }
+    return end;
+}
+
+static inline
+size_t rfind_chr_index(char *pntr, size_t start, size_t end, const char *string)
+{
+    size_t index = end;
+    while (index > start)
+    {
+        index -= 1;
+        if (chr_in(pntr[index], string))
+        {
+            return index;
+        }
+    }
+    return end;
+}
+
+static inline
+size_t find_chr_not_index(char *pntr, size_t start, size_t end, const char *string)
+{
+    size_t index = start;
+    while (index < end)
+    {
+        if (!chr_in(pntr[index], string))
+        {
+            return index;
+        }
+        index += 1;
+    }
+    return end;
+}
+
+static inline
+size_t rfind_chr_not_index(char *pntr, size_t start, size_t end, const char *string)
+{
+    size_t index = end;
+    while (index > start)
+    {
+        index -= 1;
+        if (!chr_in(pntr[index], string))
+        {
+            return index;
+        }
+    }
+    return end;
+}
+
+
+static inline
+size_t find_chr_test_length(char *pntr, size_t length, bool (*test) (char ch))
 {
     size_t index = 0;
     while (index < length)
@@ -527,7 +604,7 @@ size_t find_chr_test(char *pntr, size_t length, bool (*test) (char ch))
 }
 
 static inline
-size_t rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch))
+size_t rfind_chr_test_length(char *pntr, size_t length, bool (*test) (char ch))
 {
     size_t index = length;
     while (index > 0)
@@ -542,7 +619,7 @@ size_t rfind_chr_test(char *pntr, size_t length, bool (*test) (char ch))
 }
 
 static inline
-size_t find_chr(char *pntr, size_t length, const char *string)
+size_t find_chr_length(char *pntr, size_t length, const char *string)
 {
     size_t index = 0;
     while (index < length)
@@ -557,7 +634,7 @@ size_t find_chr(char *pntr, size_t length, const char *string)
 }
 
 static inline
-size_t rfind_chr(char *pntr, size_t length, const char *string)
+size_t rfind_chr_length(char *pntr, size_t length, const char *string)
 {
     size_t index = length;
     while (index > 0)
@@ -572,7 +649,7 @@ size_t rfind_chr(char *pntr, size_t length, const char *string)
 }
 
 static inline
-size_t find_chr_not(char *pntr, size_t length, const char *string)
+size_t find_chr_not_length(char *pntr, size_t length, const char *string)
 {
     size_t index = 0;
     while (index < length)
@@ -587,7 +664,7 @@ size_t find_chr_not(char *pntr, size_t length, const char *string)
 }
 
 static inline
-size_t rfind_chr_not(char *pntr, size_t length, const char *string)
+size_t rfind_chr_not_length(char *pntr, size_t length, const char *string)
 {
     size_t index = length;
     while (index > 0)
@@ -600,6 +677,40 @@ size_t rfind_chr_not(char *pntr, size_t length, const char *string)
     }
     return length;
 }
+
+
+static inline
+void strip_chr_length(char *pntr, size_t length, const char *string,
+    char **res_pntr, size_t *res_length)
+{
+    size_t start_index, end_index;
+
+    start_index = find_chr_not_length(pntr, length, string);
+    if (start_index == length)
+    {
+        *res_pntr = pntr;
+        *res_length = 0;
+        return;
+    }
+    end_index = rfind_chr_not_length(pntr, length, string);
+
+    *res_pntr = pntr + start_index;
+    *res_length = end_index - start_index + 1;
+}
+
+
+static inline
+size_t fwrite_index(char *pntr, size_t start, size_t end, FILE *file)
+{
+    return fwrite(pntr, 1, end - start, file);
+}
+
+static inline
+size_t fwrite_length(char *pntr, size_t length, FILE *file)
+{
+    return fwrite(pntr, 1, length, file);
+}
+
 
 #undef SCL_DLL_EXPORT
 
