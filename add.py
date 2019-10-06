@@ -12,6 +12,8 @@ files = [
     'make.bat', 'add.py', 'README.md',
 
     'design',
+
+    "code.rest", "code.lisp",
 ]
 
 

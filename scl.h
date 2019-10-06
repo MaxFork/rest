@@ -396,9 +396,9 @@ loop:
         }
     }
 
-    #undef CH
-    #undef END
-    #undef LINE
+#undef CH
+#undef END
+#undef LINE
 }
 
 static inline

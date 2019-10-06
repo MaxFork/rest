@@ -123,7 +123,7 @@ end
 var me =
 var persons = [
     new Person("Amin", 21),
-    new Person("Armin", 17)
+    new Person("Armin", 17),
     ]
 
 # structure:
@@ -143,8 +143,8 @@ struct Point
 end
 
 var points = [
-    new Point(10, 20),
-    new Point(30, 40),
+    new Point {10, 20},
+    new Point {30, 40},
     ]
 
 ## control flow:
