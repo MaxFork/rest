@@ -11,7 +11,7 @@ def range(start: int, end: int; step: int = 1): array[int]
     end
 end
 
-def main(args: array[string]): int
+def main(args: array[string])
     # prints sum of 1 to 500
     var total = 0
     for i in range(1, 500)
