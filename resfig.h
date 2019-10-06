@@ -25,7 +25,7 @@ KEYWORD resymbols[] = {
     WORD("!=",                  TOKEN_TYPE_NE),
     WORD("<",                   TOKEN_TYPE_LT),
     WORD("<=",                  TOKEN_TYPE_LE),
-    
+
 };
 
 #undef KEYWORD

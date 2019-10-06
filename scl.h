@@ -495,6 +495,14 @@ bool chr_in(char ch, const char *string)
 }
 
 static inline
+int cmp_index(char *pntr, size_t start, size_t end,
+    const char *string, size_t length)
+{
+    return (length == (end - start)) &&
+        (memcmp(pntr + start, string, length) == 0);
+}
+
+static inline
 size_t find_chr_test_index(char *pntr, size_t start, size_t end,
     int (*test) (int ch))
 {

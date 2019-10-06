@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 
+#include "restypes.h"
+
 #define SIMPLE_ANALYZER 1
 
 static inline
@@ -17,9 +19,11 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
 {
 
 #define ITER (data->iterator)
-#define CH (BUFFER_LINES_ITERATOR_GET_INDEX(ITER))
+#define CH (ITER.buffer.pntr[ITER.index])
 #define END (ITER.end)
-#define NEXT_INDEX (buffer_lines_iterator_next_index(&ITER))
+#define INC_INDEX (buffer_lines_iterator_inc_index(&ITER))
+#define START_INDEX (token->start_index)
+#define END_INDEX (token->end_index)
 
 #define SET_TOKEN_TYPE(TYPE) token->type = (TYPE)
 #define SET_START_INDEX() token->start_index = \
@@ -27,6 +31,7 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
 #define SET_END_INDEX() token->end_index = \
     (buffer_lines_index_t) {.lnum = ITER.lnum, .index = ITER.index}
 #define SET_ERROR_FLAG(VALUE) ((*error) = VALUE)
+
 #define RETURN return
 
 #define IS_SPACE ((CH == ' ') || (CH == '\t'))
@@ -36,8 +41,6 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
 
 #ifdef SIMPLE_ANALYZER
 
-#include "resfig.h"
-
     if (END)
     {
         SET_TOKEN_TYPE(TOKEN_TYPE_NULL);
@@ -46,7 +49,8 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
 
     while (IS_SPACE)
     {
-        if (NEXT_INDEX)
+        INC_INDEX;
+        if (END)
         {
             SET_TOKEN_TYPE(TOKEN_TYPE_NULL);
             RETURN;
@@ -56,18 +60,34 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
     if (CH == '\n')
     {
         SET_START_INDEX();
-        NEXT_INDEX;
+        INC_INDEX;
         SET_END_INDEX();
+
         SET_TOKEN_TYPE(TOKEN_TYPE_NEWLINE);
         RETURN;
     }
     else if (IS_LOWER)
     {
         SET_START_INDEX();
+        INC_INDEX;
 
     keyword_loop:
-        if (NEXT_INDEX)
+        if (END)
         {
+
+#define CMP_STRING(string) \
+    ((token->start_index.index - ITER.index) == STRLEN(string)) && \
+    (memcmp(ITER.buffer.pntr, string, STRLEN(string)) == 0)
+
+            if (CMP_STRING("goto"))
+            {
+                SET_END_INDEX();
+
+                SET_TOKEN_TYPE(TOKEN_TYPE_GOTO);
+                RETURN;
+            }
+
+#undef CMP_STRING
 
         }
 
@@ -107,6 +127,9 @@ void analyze_data(analyzer_data_t *data, token_t *token, int *error)
 #undef ITER
 #undef CH
 #undef END
+#undef INC_INDEX
+#undef START_INDEX
+#undef END_INDEX
 
 }
 
