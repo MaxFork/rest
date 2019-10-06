@@ -24,4 +24,4 @@ def run_command(string):
     run(string, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
 run_command('git add {}'.format(' '.join(files)))
-run_command('git commit -m "update" -a')
+run_command('git commit -am "update"')
