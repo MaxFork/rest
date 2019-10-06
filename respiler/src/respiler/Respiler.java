@@ -58,7 +58,12 @@ public class Respiler
 					break;
 				
 				if (array[index] == '\n')
+				{
 					index += 1;
+					
+					if (index == array.length)
+						break;
+				}
 			}
 			else if (array[index] == '\n')
 			{
@@ -88,22 +93,43 @@ public class Respiler
 		index = 0;
 		lnum = 0;
 		
+		result[lnum].start = index;
 		while (true)
 		{
 			if (array[index] == '\r')
 			{
+				index += 1;
+				
+				array[index] = '\n';
+				result[lnum].end = index;
+				
+				if (index == array.length)
+					break;
+				
+				if (array[index] == '\n')
+				{
+					index += 1;
+					
+					if (index == array.length)
+						break;
+				}
 				
 			}
 			else if (array[index] == '\n')
 			{
+				index += 1;
 				
+				result[lnum].end = index;
+				
+				if (index == array.length)
+					break;
+				
+				lnum += 1;
 			}
 			else
 			{
 				
 			}
 		}
-		
-		return result;
 	}
 }
