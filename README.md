@@ -1,7 +1,8 @@
 
 ## Rest Programming Language
 
-*Syntax Example:*
+**Syntax Example:**
+
 ```
 
 def range(start: int, end: int; step: int = 1): array[int]
