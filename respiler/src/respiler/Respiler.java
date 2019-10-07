@@ -8,6 +8,7 @@ import exceptions.BaseException;
 import exceptions.BigFileSizeException;
 import exceptions.ReadNumberException;
 import types.BufferLines;
+import types.ByteTest;
 import types.Line;
 import types.Token;
 import types.TokenStream;
@@ -157,24 +158,57 @@ public class Respiler
 		return bufferLines;
 	}
 	
-	public static TokenStream analyzeBufferLines(BufferLines bufferLines)
+	public static TokenStream analyzeBufferLines(BufferLines _bufferLines)
 	{
 		return new TokenStream() 
 		{
-			private BufferLines streamBufferLines;
+			private BufferLines bufferLines;
 			private int lnum;
 			private int index;
+			private boolean end;
 			
 			{
-				this.streamBufferLines = bufferLines;
+				this.bufferLines = _bufferLines;
 				this.lnum = 0;
-				this.index = 0;
+				this.index = bufferLines.lines[lnum].start;
+				this.end = false;
+			}
+			
+			private void incIndex()
+			{
+				index += 1;
+				if (index == bufferLines.lines[lnum].end)
+				{
+					lnum += 1;
+					if (lnum == bufferLines.lines.length)
+					{
+						lnum -= 1;
+						end = true;
+						return;
+					}
+					index = bufferLines.lines[lnum].start;
+				}
+			}
+			
+			private byte byteAtIndex()
+			{
+				return bufferLines.buffer[index];
 			}
 			
 			@Override
 			public Token nextToken() 
 			{
+				while (ByteTest.isBlank.test(byteAtIndex()))
+				{
+					incIndex();
+					if (end)
+						return null;
+				}
 				
+				if (ByteTest.isLower.test(byteAtIndex()))
+				{
+					
+				}
 				return null;
 			}
 		};

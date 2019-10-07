@@ -68,7 +68,7 @@ public class Line
 		index = start;
 		while (index < end)
 		{
-			if (test.Test(buffer[index]))
+			if (test.test(buffer[index]))
 				return index;
 			index += 1;
 		}
@@ -82,7 +82,7 @@ public class Line
 		index = start;
 		while (index < end)
 		{
-			if (!test.Test(buffer[index]))
+			if (!test.test(buffer[index]))
 				return index;
 			index += 1;
 		}
@@ -97,7 +97,7 @@ public class Line
 		while (index > start)
 		{
 			index -= 1;
-			if (test.Test(buffer[index]))
+			if (test.test(buffer[index]))
 				return index;
 		}
 		return end;
@@ -111,7 +111,7 @@ public class Line
 		while (index > start)
 		{
 			index -= 1;
-			if (!test.Test(buffer[index]))
+			if (!test.test(buffer[index]))
 				return index;
 		}
 		return end;
