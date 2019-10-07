@@ -9,7 +9,7 @@ files = [
 
     'restypes.h', 'rescore.h', 'resfig.h', 'restokens.h',
 
-    'config.py', 'main.py'
+    'config.py', 'main.py',
 
     'make.bat', 'update.py', 'README.md',
 

@@ -26,6 +26,7 @@ int main(int argc, char **argv)
 
     for (size_t lnum = 0; lnum < buffer_lines.lines.total; lnum += 1)
     {
+        lstrip_chr(buffer_lines.buffer.pntr, &(view.start), &(view.end), );
         view = buffer_lines.lines.pntr[lnum];
         view.start = find_chr_not_index(buffer_lines.buffer.pntr, view.start,
             view.end, " \t");

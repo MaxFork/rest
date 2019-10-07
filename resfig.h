@@ -2,6 +2,21 @@
 #ifndef RESFIG_H
 #define RESFIG_H 1
 
+typedef enum
+{
+    TOKEN_TYPE_NULL,
+    TOKEN_TYPE_NEWLINE,
+    TOKEN_TYPE_NAME,
+
+    TOKEN_TYPE_FROM,
+    TOKEN_TYPE_IMPORT,
+    TOKEN_TYPE_AS,
+
+    TOKEN_TYPE_GOTO,
+    TOKEN_TYPE_LABEL,
+
+} token_type;
+
 #define KEYWORD \
     struct { const char *word; size_t word_len; token_type type; }
 #define ITEM(STR, TYPE) {STR, (sizeof(STR) - 1), TYPE}

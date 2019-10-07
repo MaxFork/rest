@@ -3,6 +3,7 @@
     from        import      as
 
     goto        label
+    block       end
     if          then        else        end
     loop        for         in          while
     switch      case        default

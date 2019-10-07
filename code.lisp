@@ -13,17 +13,10 @@
 start:
 (if end (jump end))
 
-(if (= ch ' ')) [inc_index (jump start)])
+(set i (find_chr buffer " \t"))
 
 
-(if (<= 'a' ch 'z') [(set j i) (jump word_loop)])
-
-word_loop:
-[inc_index (if end (jump word_end)) (if (<= 'a' ch 'z') (jump word_end))]
-
-
-word_end:
-
+(if (in " \t") )
 
 (jump start)
 end:

@@ -130,11 +130,11 @@ bool chr_in(char ch, const char *string);
 // find_*_index
 
 static inline
-size_t find_chr_test_index(char *pntr, size_t start, size_t end,
+size_t find_test_index(char *pntr, size_t start, size_t end,
     int (*test) (int ch));
 
 static inline
-size_t rfind_chr_test_index(char *pntr, size_t start, size_t end,
+size_t rfind_test_index(char *pntr, size_t start, size_t end,
     int (*test) (int ch));
 
 static inline
@@ -156,12 +156,10 @@ size_t rfind_chr_not_index(char *pntr, size_t start, size_t end,
 // find_*_length
 
 static inline
-size_t find_chr_test_length(char *pntr, size_t length,
-    bool (*test) (char ch));
+size_t find_test_length(char *pntr, size_t length, int (*test) (int ch));
 
 static inline
-size_t rfind_chr_test_length(char *pntr, size_t length,
-    bool (*test) (char ch));
+size_t rfind_test_length(char *pntr, size_t length, int (*test) (int ch));
 
 static inline
 size_t find_chr_length(char *pntr, size_t length, const char *string);
@@ -503,7 +501,7 @@ int cmp_index(char *pntr, size_t start, size_t end,
 }
 
 static inline
-size_t find_chr_test_index(char *pntr, size_t start, size_t end,
+size_t find_test_index(char *pntr, size_t start, size_t end,
     int (*test) (int ch))
 {
     size_t index = start;
@@ -519,7 +517,7 @@ size_t find_chr_test_index(char *pntr, size_t start, size_t end,
 }
 
 static inline
-size_t rfind_chr_test_index(char *pntr, size_t start, size_t end,
+size_t rfind_test_index(char *pntr, size_t start, size_t end,
     int (*test) (int ch))
 {
     size_t index = start;
@@ -598,7 +596,7 @@ size_t rfind_chr_not_index(char *pntr, size_t start, size_t end,
 
 
 static inline
-size_t find_chr_test_length(char *pntr, size_t length, bool (*test) (char ch))
+size_t find_test_length(char *pntr, size_t length, int (*test) (int ch))
 {
     size_t index = 0;
     while (index < length)
@@ -613,7 +611,7 @@ size_t find_chr_test_length(char *pntr, size_t length, bool (*test) (char ch))
 }
 
 static inline
-size_t rfind_chr_test_length(char *pntr, size_t length, bool (*test) (char ch))
+size_t rfind_test_length(char *pntr, size_t length, int (*test) (int ch))
 {
     size_t index = length;
     while (index > 0)
@@ -687,6 +685,21 @@ size_t rfind_chr_not_length(char *pntr, size_t length, const char *string)
     return length;
 }
 
+
+static inline
+size_t lstrip_chr(char *pntr, size_t *start, size_t *end, const char *string)
+{
+    *start = find_chr_not_index(pntr, *start, *end, string);
+    return (*end) - (*start);
+}
+
+static inline
+size_t rstrip_chr(char *pntr, size_t *start, size_t *end, const char *string)
+{
+    size_t index;
+
+    index = rfind_chr_not_index(pntr, *start, *end, string);
+}
 
 static inline
 void strip_chr_length(char *pntr, size_t length, const char *string,

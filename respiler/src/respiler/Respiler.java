@@ -7,7 +7,10 @@ import java.io.IOException;
 import exceptions.BaseException;
 import exceptions.BigFileSizeException;
 import exceptions.ReadNumberException;
+import types.BufferLines;
 import types.Line;
+import types.Token;
+import types.TokenStream;
 
 public class Respiler 
 {	
@@ -87,7 +90,7 @@ public class Respiler
 		result = new Line[total];
 		for (lnum = 0; lnum < result.length; lnum += 1)
 		{
-			result[lnum] = new Line(array, 0, 0);
+			result[lnum] = new Line(0, 0);
 		}
 		
 		index = 0;
@@ -114,6 +117,9 @@ public class Respiler
 						break;
 				}
 				
+				lnum += 1;
+				result[lnum].start = index;
+				
 			}
 			else if (array[index] == '\n')
 			{
@@ -125,11 +131,52 @@ public class Respiler
 					break;
 				
 				lnum += 1;
+				result[lnum].start = index;
 			}
 			else
 			{
+				index += 1;
 				
+				if (index == array.length)
+				{
+					result[lnum].end = index;
+					break;
+				}
 			}
 		}
+		
+		return result;
+	}
+	
+	public static BufferLines readLines(FileInputStream stream) throws IOException, BaseException
+	{
+		BufferLines bufferLines = new BufferLines();
+		
+		bufferLines.buffer = readFile(stream);
+		bufferLines.lines = splitLines(bufferLines.buffer);
+		return bufferLines;
+	}
+	
+	public static TokenStream analyzeBufferLines(BufferLines bufferLines)
+	{
+		return new TokenStream() 
+		{
+			private BufferLines streamBufferLines;
+			private int lnum;
+			private int index;
+			
+			{
+				this.streamBufferLines = bufferLines;
+				this.lnum = 0;
+				this.index = 0;
+			}
+			
+			@Override
+			public Token nextToken() 
+			{
+				
+				return null;
+			}
+		};
 	}
 }
