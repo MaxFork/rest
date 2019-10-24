@@ -4,14 +4,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.management.RuntimeErrorException;
+
+import exceptions.AnalyzerException;
 import exceptions.BaseException;
 import exceptions.BigFileSizeException;
 import exceptions.ReadNumberException;
 import types.BufferLines;
 import types.ByteTest;
+import types.ErrorType;
 import types.Line;
 import types.Token;
 import types.TokenStream;
+import types.TokenType;
 
 public class Respiler 
 {	
@@ -102,9 +107,10 @@ public class Respiler
 		{
 			if (array[index] == '\r')
 			{
+				array[index] = '\n';
+				
 				index += 1;
 				
-				array[index] = '\n';
 				result[lnum].end = index;
 				
 				if (index == array.length)
@@ -166,12 +172,49 @@ public class Respiler
 			private int lnum;
 			private int index;
 			private boolean end;
+			private Token token;
 			
 			{
 				this.bufferLines = _bufferLines;
 				this.lnum = 0;
 				this.index = bufferLines.lines[lnum].start;
+				this.token = null;
 				this.end = false;
+				
+			}
+			
+			private void setStartIndex()
+			{
+				token.startIndex = index;
+				token.startLine = lnum;
+			}
+			
+			private void setEndIndex()
+			{
+				token.endIndex = index;
+				token.endLine = lnum;
+			}
+			
+			private void setType(TokenType type)
+			{
+				token.type = type;
+			}
+			
+			private AnalyzerException newException(ErrorType type)
+			{
+				return new AnalyzerException(type, token.startIndex, token.startLine, token.endLine, token.endIndex); 
+			}
+			
+			private void setNameTypeCheckKeyword()
+			{
+				TokenType type;
+				
+				if (token.startLine == token.endLine)
+				{
+					type = Config.searchKeyword(bufferLines.buffer, token.startIndex, token.endIndex - token.startIndex);
+					token.type = (type == null) ? TokenType.NAME : type;
+				}
+				throw new RuntimeException("write here!");
 			}
 			
 			private void incIndex()
@@ -190,26 +233,173 @@ public class Respiler
 				}
 			}
 			
-			private byte byteAtIndex()
+			private byte getByte()
 			{
 				return bufferLines.buffer[index];
 			}
 			
 			@Override
-			public Token nextToken() 
+			public Token nextToken() throws AnalyzerException 
 			{
-				while (ByteTest.isBlank.test(byteAtIndex()))
+				token = new Token(null, 0, 0, 0, 0);
+				
+				if (end)
+				{
+					return null;
+				}
+				
+				while (ByteTest.isBlank(getByte()))
 				{
 					incIndex();
 					if (end)
 						return null;
 				}
 				
-				if (ByteTest.isLower.test(byteAtIndex()))
+				// newline
+				
+				if (getByte() == '\n')
 				{
+					setStartIndex();
+					incIndex();
+					setEndIndex();
 					
+					setType(TokenType.NEWLINE);
+					return token;
 				}
-				return null;
+				
+				// keyword or name
+				
+				else if (ByteTest.isLower(getByte()))
+				{
+					setStartIndex();
+					
+					incIndex();
+					if (end)
+					{
+						setEndIndex();
+						setNameTypeCheckKeyword();
+						return token;
+					}
+					
+					while (ByteTest.isLower(getByte()))
+					{
+						incIndex();
+						if (end)
+						{
+							setEndIndex();
+							setNameTypeCheckKeyword();
+							return token;
+						}
+					}
+					
+					if (ByteTest.isUpper(getByte()) || ByteTest.isDigit(getByte()) || (getByte() == '_'))
+					{
+						incIndex();
+						if (end)
+						{
+							setEndIndex();
+							
+							setType(TokenType.NAME);
+							return token;
+						}
+						
+						while (ByteTest.isLetter(getByte()) || ByteTest.isDigit(getByte()) || (getByte() == '_'))
+						{
+							incIndex();
+							if (end)
+								break;
+						}
+						
+						setEndIndex();
+						
+						setType(TokenType.NAME);
+						return token;
+					}
+					
+					setEndIndex();
+					
+					setNameTypeCheckKeyword();
+					return token;
+				}
+				
+				// name
+				
+				else if (ByteTest.isUpper(getByte()) || (getByte() == '_'))
+				{
+					setStartIndex();
+					
+					incIndex();
+					if (end)
+					{
+						setEndIndex();
+						
+						setType(TokenType.NAME);
+						return token;
+					}
+					
+					while (ByteTest.isLetter(getByte()) || ByteTest.isDigit(getByte()) || (getByte() == '_'))
+					{
+						incIndex();
+						if (end)
+							break;
+					}
+					
+					setEndIndex();
+					
+					setType(TokenType.NAME);
+					return token;
+				}
+				
+				// number
+				
+				else if (ByteTest.isDigit(getByte()))
+				{
+					setStartIndex();
+					
+					incIndex();
+					if (end)
+					{
+						setEndIndex();
+						
+						setType(TokenType.NUMBER);
+						return token;
+					}
+					
+					while (ByteTest.isDigit(getByte()))
+					{
+						incIndex();
+						if (end)
+						{
+							break;
+						}
+					}
+					
+					setEndIndex();
+					
+					setType(TokenType.NUMBER);
+					return token;
+				}
+				
+				else if (getByte() == '.')
+				{
+					setStartIndex();
+					incIndex();
+					setEndIndex();
+					
+					setType(TokenType.DOT);
+					return token;
+				}
+				
+				// error
+				
+				else
+				{
+					setStartIndex();
+					incIndex();
+					setEndIndex();
+					
+					throw newException(ErrorType.INVALID_CHARACTER);
+				}
 			}
 		};
 	}

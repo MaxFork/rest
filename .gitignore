@@ -4,3 +4,6 @@ respiler/.project
 respiler/.classpath
 respiler/.settings/
 respiler/bin/
+
+GLFW*/
+SDL2*/

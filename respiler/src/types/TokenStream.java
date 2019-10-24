@@ -1,6 +1,8 @@
 package types;
 
+import exceptions.AnalyzerException;
+
 public interface TokenStream 
 {
-	public Token nextToken();
+	public Token nextToken() throws AnalyzerException;
 }

@@ -26,7 +26,9 @@ keywords = {
     "continue":             "continue",
 
     "var":                  "var",
+    "const":                "const",
     "let":                  "let",
+    "ref":                  "ref",
 
     "def":                  "def",
     "yield":                "yield",

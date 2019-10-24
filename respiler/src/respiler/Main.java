@@ -22,12 +22,6 @@ public class Main
 		
 		for (int i = 0; i < lines.length; i += 1)
 		{
-			lines[i].copyTo(line);
-			if (line.lstrip(buffer, ByteTest.isBlank) != 0 && buffer[line.start] != '#')
-			{
-				System.out.print((i + 1) + ": ");
-				lines[i].write(buffer, System.out);
-			}
 		}
 	}
 }
