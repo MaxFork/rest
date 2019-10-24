@@ -1,0 +1,17 @@
+
+data types:
+    char            'a'
+    int             1
+    float           1.0
+
+    string          "abc"
+    array           [1, 2, 3]
+
+    boolean         true, false
+    null            null
+    function
+
+
+type function nullstring (var)
+    return (var ?= string) || (var ?= null)
+end type

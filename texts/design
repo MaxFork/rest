@@ -26,7 +26,6 @@
     [int, int]              [1, 2]          ->  an array of two ints
     array[int, 3]           [1, 2, 3]       ->  an array of three ints
     array[int | string]     [1, "Hello"]    ->  an array of int and string
-    array[, const]          ["World"]       ->  an array of constant length
     boolean                 true, fasle
     null                    null
     function                def (a, b) = a + b
@@ -57,7 +56,7 @@ var new_string = string[::-1]               # new_string == "olleH"
 
 def sum(a: int, b: int): int = a + b
 
-def range(start: int, stop: int, step: int): [int]
+def range(const start: int, const stop: int, const step: int): [int]
     for i = start; i < stop; i += step
         yield i
     end
