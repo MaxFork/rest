@@ -3,6 +3,10 @@ import sys
 import config
 from printf import *
 
+extra_token_types = [
+    'NAME', 'NEWLINE'
+]
+
 keyword_names = {
     "from", "import", "label",
 
