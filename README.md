@@ -4,7 +4,6 @@
 **Syntax Example:**
 
 ```
-
 def range(start: int, end: int; step: int = 1): array[int]
     while start < end
         yield start
@@ -20,5 +19,4 @@ def main(args: array[string])
     end
     print(total)
 end
-
 ```
